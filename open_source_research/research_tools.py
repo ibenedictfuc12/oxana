@@ -72,7 +72,24 @@ class ResearchTools:
             "Tutorial: Sequence Modeling with Transformers"
         ]
 
-    
+    def benchmark_batch_sizes(self, architecture_name, dataset_path, batch_sizes=None):
+        if batch_sizes is None:
+            batch_sizes = [1, 8, 16, 32]
+        model = self._create_model(architecture_name)
+        results = {}
+        for bs in batch_sizes:
+            loader = self._create_dummy_loader(dataset_path, batch_size=bs)
+            total_time = 0
+            steps = 0
+            for batch in loader:
+                inputs, _ = batch
+                start = time.time()
+                _ = model(inputs)
+                total_time += time.time() - start
+                steps += 1
+            avg_time = total_time / steps if steps > 0 else 0
+            results[bs] = avg_time
+        return f"Benchmark results for {architecture_name} on {dataset_path}: {results}"
 
     def synthetic_experiment(self, architecture_name, steps=10, input_shape=(1,3,224,224)):
         model = self._create_model(architecture_name)
@@ -87,7 +104,8 @@ class ResearchTools:
         avg_inference = total_time / steps
         return f"Synthetic test on {architecture_name} with average inference time={avg_inference:.4f}s"
 
-   
+    def generate_random_experiment_name(self):
+        return "".join(random.choices(string.ascii_lowercase + string.digits, k=8))
 
     def save_experiment_checkpoint(self, model, checkpoint_dir="checkpoints"):
         if not os.path.exists(checkpoint_dir):
@@ -97,7 +115,29 @@ class ResearchTools:
         torch.save(model.state_dict(), path)
         return path
 
-    
+    def _create_model(self, architecture_name, remove_final_layer=False):
+        if architecture_name == "resnet18":
+            model = models.resnet18(pretrained=False)
+            if remove_final_layer:
+                model.fc = nn.Identity()
+            return model
+        if architecture_name == "resnet50":
+            model = models.resnet50(pretrained=False)
+            if remove_final_layer:
+                model.fc = nn.Identity()
+            return model
+        if architecture_name == "vgg16":
+            model = models.vgg16(pretrained=False)
+            if remove_final_layer:
+                model.classifier[-1] = nn.Identity()
+            return model
+        if architecture_name == "mobilenet_v2":
+            model = models.mobilenet_v2(pretrained=False)
+            if remove_final_layer:
+                model.classifier[-1] = nn.Identity()
+            return model
+        return nn.Linear(10, 2)
+
     def _train_and_evaluate(self, model, loader, epochs=1):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.to(device)
@@ -126,7 +166,11 @@ class ResearchTools:
                 total += labels.size(0)
         return correct / total if total > 0 else 0
 
-    
+    def _create_dummy_loader(self, dataset_path, batch_size=4):
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor()
+        ])
         dataset = datasets.FakeData(transform=transform)
         loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
         return loader
