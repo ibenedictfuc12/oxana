@@ -1,0 +1,21 @@
+# config.yaml
+
+environment: development
+framework:
+  device: "cuda"  
+  logging_level: "INFO"
+  
+paths:
+  data_dir: "./data"
+  logs_dir: "./logs"
+  checkpoints_dir: "./checkpoints"
+  
+training:
+  batch_size: 8
+  epochs: 10
+  learning_rate: 0.001
+  
+style_transfer:
+  content_weight: 1e4
+  style_weight: 1e2
+  steps: 50
