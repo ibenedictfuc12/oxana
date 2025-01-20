@@ -18,9 +18,7 @@ A fictitious, yet comprehensive AI-based art framework designed for content gene
 - [Configuration](#configuration)
 - [Examples](#examples)
 - [Tests](#tests)
-- [Docker](#docker)
-- [Contributing](#contributing)
-- [License](#license)
+
 
 ---
 
